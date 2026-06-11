@@ -111,7 +111,7 @@
     body.portalRoomState .portal-caption, body.aboutOpen .portal-caption{opacity:0 !important;pointer-events:none}
     body.portalRoomState .corners, body.aboutOpen .corners{opacity:.28}
     @media (max-width: 860px){ .hero-copy{max-width:calc(100vw - 40px);left:20px;bottom:28px} .hero-copy p{max-width:100%} .hero-meta{right:16px;top:16px;gap:8px} }
-    @media (max-width: 640px){ .hero-copy h1{font-size:clamp(2.4rem, 11 vw, 4.2rem)} .cta-row{flex-direction:column;align-items:flex-start} .cta,.ghost{width:100%;justify-content:center;text-align:center} .hero-meta{display:none} }
+    @media (max-width: 640px){ .hero-copy h1{font-size:clamp(2.4rem, 11  vw, 4.2rem)} .cta-row{flex-direction:column;align-items:flex-start} .cta,.ghost{width:100%;justify-content:center;text-align:center} .hero-meta{display:none} }
     .room-back-btn{
       position:fixed;left:22px;top:22px;z-index:120;appearance:none;border:none;background:rgba(10,8,18,.5);
       color:rgba(255,255,255,.88);font:500 11px/1 'Inter',sans-serif;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;
@@ -565,24 +565,23 @@
     const floorGlow = makeGlowDisc(10.6, 0xffd24a, 0.09); floorGlow.position.set(0, 0.05, 0); hubGroup.add(floorGlow);
     for(let i=0;i<4;i++){ const arm = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 5.1), new THREE.MeshStandardMaterial({ color:0x3b2260, roughness:.22, metalness:.44, emissive:0x5e2ae3, emissiveIntensity:.4 })); arm.position.y = 0.08; arm.rotation.y = i * Math.PI / 2; hubGroup.add(arm); }
 
-    // ===== LINEAR GALLERY ROOM FACTORY (DOLLY WALK) =====
+    // ===== NEW CLEAN & SERIOUS GALLERY ROOM FACTORY =====
     function createLinearGalleryRoom(def){
       const room = new THREE.Group(); room.visible = false;
       const c = def.color;
       
-      // Architecture: Long Corridor
-      const corridorWidth = 6;
-      const corridorHeight = 4;
-      const corridorLength = 40; // Long gallery
+      const corridorWidth = 6.5;
+      const corridorHeight = 4.5;
+      const corridorLength = 45; 
 
-      // Materials - Pure Minimalist
-      const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1816, roughness: 0.85, metalness: 0.05 });
-      const wallMat = new THREE.MeshStandardMaterial({ color: 0xfaf8f5, roughness: 0.92, metalness: 0 }); // Pure white
-      const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 });
+      // Fine Art / Architectural Materials (Seriadas e sóbrias)
+      const floorMat = new THREE.MeshStandardMaterial({ color: 0x252526, roughness: 0.55, metalness: 0.12 }); // Concreto polido escuro
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f7, roughness: 0.9, metalness: 0 });     // Off-white fosco elegante
+      const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x181819, roughness: 0.95 });               // Teto técnico escuro
 
       // Floor
       const floor = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth, 0.1, corridorLength), floorMat);
-      floor.position.set(0, -0.95, corridorLength / 2 - 5); // Centered mostly in front
+      floor.position.set(0, -0.95, corridorLength / 2 - 5);
       floor.receiveShadow = true;
       room.add(floor);
 
@@ -594,100 +593,82 @@
       // Left Wall
       const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.1, corridorHeight, corridorLength), wallMat);
       wallL.position.set(-corridorWidth / 2, corridorHeight / 2 - 0.95, corridorLength / 2 - 5);
+      wallL.receiveShadow = true;
       room.add(wallL);
 
       // Right Wall
       const wallR = new THREE.Mesh(new THREE.BoxGeometry(0.1, corridorHeight, corridorLength), wallMat);
       wallR.position.set(corridorWidth / 2, corridorHeight / 2 - 0.95, corridorLength / 2 - 5);
+      wallR.receiveShadow = true;
       room.add(wallR);
 
       // End Wall
       const wallEnd = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth, corridorHeight, 0.1), wallMat);
       wallEnd.position.set(0, corridorHeight / 2 - 0.95, corridorLength - 5);
+      wallEnd.receiveShadow = true;
       room.add(wallEnd);
 
-      // Entry Portal Frame
-      const entryFrame = new THREE.Mesh(
-        new THREE.BoxGeometry(2.2, 3.2, 0.15),
-        new THREE.MeshStandardMaterial({ color: 0x2a2825, roughness: 0.2, metalness: 0.2 })
-      );
-      entryFrame.position.set(0, 0.65, 0.1);
-      room.add(entryFrame);
-
-      // Artworks (Large Frames) along the walls
+      // Clean Framing Function
       function createLargeFrame(x, y, z, w, h, rotY = 0) {
         const frameGroup = new THREE.Group();
         
-        // Frame Border
-        const border = 0.05;
+        // Minimal Ultra-Thin Black Frame
+        const border = 0.03;
         const frameMesh = new THREE.Mesh(
-          new THREE.BoxGeometry(w + border * 2, h + border * 2, 0.05),
-          new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4, metalness: 0.1 })
+          new THREE.BoxGeometry(w + border * 2, h + border * 2, 0.04),
+          new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.6, metalness: 0.1 })
         );
+        frameMesh.castShadow = true;
         frameGroup.add(frameMesh);
 
-        // Canvas / Art
-        const canvas = new THREE.Mesh(
-          new THREE.BoxGeometry(w, h, 0.02),
-          new THREE.MeshStandardMaterial({ color: 0xf5f3ef, roughness: 0.8, metalness: 0 }) // White canvas
+        // Passepartout (White Matting)
+        const matting = new THREE.Mesh(
+          new THREE.BoxGeometry(w, h, 0.01),
+          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0 })
         );
-        canvas.position.z = 0.02;
-        frameGroup.add(canvas);
+        matting.position.z = 0.02;
+        frameGroup.add(matting);
 
-        // Abstract Art (Procedural)
-        const artGroup = new THREE.Group();
-        artGroup.position.z = 0.03;
-        
-        // Large color blocks simulating art
-        const shapes = [];
-        for (let i = 0; i < 3; i++) {
-          const shapeW = w * (0.3 + Math.random() * 0.4);
-          const shapeH = h * (0.2 + Math.random() * 0.4);
-          const shape = new THREE.Mesh(
-            new THREE.BoxGeometry(shapeW, shapeH, 0.01),
-            new THREE.MeshStandardMaterial({ 
-              color: i === 0 ? c : (i === 1 ? 0x2a2825 : 0xe0e0e0), 
-              roughness: 0.5, 
-              metalness: 0.1 
-            })
-          );
-          shape.position.set(
-            (Math.random() - 0.5) * w * 0.5,
-            (Math.random() - 0.5) * h * 0.5,
-            0
-          );
-          artGroup.add(shape);
-        }
-        frameGroup.add(artGroup);
+        // Fine Art Content Placeholder
+        const artwork = new THREE.Mesh(
+          new THREE.BoxGeometry(w * 0.75, h * 0.75, 0.01),
+          new THREE.MeshStandardMaterial({ 
+            color: 0x1f1f22, 
+            roughness: 0.4, 
+            metalness: 0.05,
+            emissive: c,
+            emissiveIntensity: 0.04 
+          })
+        );
+        artwork.position.z = 0.026;
+        frameGroup.add(artwork);
 
         frameGroup.position.set(x, y, z);
         frameGroup.rotation.y = rotY;
         room.add(frameGroup);
 
-        // Spotlight for this artwork
-        const spot = new THREE.SpotLight(0xfff5e6, 2.5, 8, Math.PI / 5, 0.6, 1.5);
-        spot.position.set(x, y + 2, z + 1.5); // Slightly in front
-        spot.target.position.set(x, y, z);
+        // Individual Studio Spotlight per Artwork
+        const spot = new THREE.SpotLight(0xfff8ee, 3.8, 12, Math.PI / 4.8, 0.5, 1.2);
+        spot.position.set(x * 0.82, y + 2.0, z + (x > 0 ? -1.2 : 1.2)); 
+        spot.target = frameGroup;
         spot.castShadow = true;
-        spot.shadow.mapSize.set(256, 256);
+        spot.shadow.mapSize.set(512, 512);
+        spot.shadow.bias = -0.001;
         room.add(spot);
-        room.add(spot.target);
       }
 
-      // Place artworks along the corridor
-      // Left Wall
-      createLargeFrame(-corridorWidth/2 + 0.06, 1.8, 5, 2.0, 2.8, Math.PI / 2);
-      createLargeFrame(-corridorWidth/2 + 0.06, 1.8, 15, 2.4, 2.0, Math.PI / 2);
-      createLargeFrame(-corridorWidth/2 + 0.06, 1.8, 25, 1.8, 2.4, Math.PI / 2);
+      // Symmetrical & Clean Layout along the walls
+      createLargeFrame(-corridorWidth/2 + 0.06, 1.6, 6, 2.2, 2.8, Math.PI / 2);
+      createLargeFrame(-corridorWidth/2 + 0.06, 1.6, 16, 2.6, 2.0, Math.PI / 2);
+      createLargeFrame(-corridorWidth/2 + 0.06, 1.6, 26, 1.8, 2.4, Math.PI / 2);
 
-      // Right Wall
-      createLargeFrame(corridorWidth/2 - 0.06, 1.8, 10, 2.4, 2.0, -Math.PI / 2);
-      createLargeFrame(corridorWidth/2 - 0.06, 1.8, 20, 2.0, 2.8, -Math.PI / 2);
-      createLargeFrame(corridorWidth/2 - 0.06, 1.8, 30, 2.2, 2.2, -Math.PI / 2);
+      createLargeFrame(corridorWidth/2 - 0.06, 1.6, 11, 2.6, 2.0, -Math.PI / 2);
+      createLargeFrame(corridorWidth/2 - 0.06, 1.6, 21, 2.2, 2.8, -Math.PI / 2);
+      createLargeFrame(corridorWidth/2 - 0.06, 1.6, 31, 2.4, 2.4, -Math.PI / 2);
 
-      // Ambient Light
-      const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-      room.add(ambient);
+      // Soter/Ambient light setup for art gallery
+      const softStudioLight = new THREE.AmbientLight(0xffffff, 0.55);
+      room.add(softStudioLight);
 
       return room;
     }
@@ -736,7 +717,7 @@
       const txt = makeTextSprite(def.label, '#fff8e8'); txt.position.set(0,2.46,0); g.add(txt);
       const mockups = createPortalMockups(def); mockups.position.set(0, 0.05, 1.55); g.add(mockups);
       
-      // Use Linear Gallery
+      // Implement Clean Gallery Architectural Viewports
       const room = createLinearGalleryRoom(def); 
       room.position.set(0, -0.05, 1.45); 
       g.add(room);
@@ -828,9 +809,8 @@
     const hubTarget = new THREE.Vector3(0, hubY + 1.9, 0);
     
     // Linear Room Controls
-    let roomTargetX = 0; 
     let roomCurrentX = 0;
-    const roomZ = 4; // Fixed depth for camera in corridor
+    const roomZ = 4.2; 
     
     const pointer = new THREE.Vector2(); const raycaster = new THREE.Raycaster();
     let hoveredPortal = null; let selectedPortal = null; let clickTargetPortal = null;
@@ -863,12 +843,9 @@
       if(state === 'hub' && orbitEnabled){
         targetOrbitTheta -= e.movementX * 0.0038; targetOrbitPhi += e.movementY * 0.0028; targetOrbitPhi = Math.max(-0.18, Math.min(0.72, targetOrbitPhi));
       } else if(state === 'portalRoom') {
-        // Linear Dolly Movement
-        // Dragging Left/Right moves camera sideways (X axis)
+        // Continuous Dolly Track Movement
         targetRoomX -= e.movementX * 0.015; 
-        
-        // Clamp movement to corridor width (approx width/2 - margin)
-        const maxSlide = 2.0; 
+        const maxSlide = 2.5; 
         targetRoomX = Math.max(-maxSlide, Math.min(maxSlide, targetRoomX));
       }
     });
@@ -938,7 +915,7 @@
     const aboutLiftPoint = new THREE.Vector3(0, hubY + 3.9, 1.3);
     const aboutDriftPoint = new THREE.Vector3(0, hubY - 5.6, 2.1);
     
-    // Linear Room State
+    // Linear Room State Tracker
     let targetRoomX = 0;
 
     function setPortalShellVisibility(item, visible){ item.arch.visible = visible; item.leftPillar.visible = visible; item.rightPillar.visible = visible; item.base.visible = visible; item.text.visible = visible; item.glow.visible = visible; item.innerGlow.visible = visible; }
@@ -949,15 +926,13 @@
       roomInfoTitle.textContent = item.data.label; roomInfoTitle.style.color = item.data.cssColor; roomInfoDesc.textContent = item.data.desc; roomInfoCount.textContent = item.data.projectCount + ' projetos'; roomInfoYear.textContent = item.data.yearRange; roomInfo.classList.add('show');
       roomEnterStart = clock.getElapsedTime();
       
-      // Initial Position (Portal Entry)
       const entryPos = item.group.localToWorld(new THREE.Vector3(0, 1.32, 1.55)); 
       camera.position.copy(entryPos); 
-      camera.lookAt(item.group.localToWorld(new THREE.Vector3(0, 1.5, 10))); // Look down corridor
+      camera.lookAt(item.group.localToWorld(new THREE.Vector3(0, 1.5, 10))); 
       
       roomCamFrom.copy(entryPos); 
       roomLookFrom.set(0, 1.5, 10); 
       
-      // Reset Linear Controls
       targetRoomX = 0;
       roomCurrentX = 0;
 
@@ -967,10 +942,9 @@
     function exitPortalRoom(){
       if(!activeRoomPortal) return; roomExitStart = clock.getElapsedTime();
       roomCamFrom.copy(camera.position);
-      // Calculate exit position
       const exitPos = activeRoomPortal.group.localToWorld(new THREE.Vector3(0, 1.32, 1.55));
       roomExitCamTo.copy(exitPos);
-      roomExitLookAt.set(0, 1.5, 0); // Look back at portal
+      roomExitLookAt.set(0, 1.5, 0); 
       
       roomBackBtn.classList.remove('show'); roomInfo.classList.remove('show'); document.body.classList.remove('portalHover');
       const ec = activeRoomPortal.data.cssColor;
@@ -1010,19 +984,15 @@
       if(!activeRoomPortal) return; downIndicator.classList.remove('show');
       const p = Math.min((t - roomEnterStart) / ROOM_TRAVEL_DUR, 1); const e = easeInOutCubic(p);
       
-      // Move camera forward into the corridor (Z axis in local space)
-      // Start at entryPos (near 0), move to roomZ (4)
       const startZ = 1.55;
-      const endZ = roomZ; // Defined in controls section
+      const endZ = roomZ; 
       
-      // Transform target positions to world space
       const startPos = activeRoomPortal.group.localToWorld(new THREE.Vector3(0, 1.32, startZ));
       const endPos = activeRoomPortal.group.localToWorld(new THREE.Vector3(0, 1.32, endZ));
       
       camera.position.lerpVectors(startPos, endPos, e);
       
-      // Look down the corridor
-      const lookTarget = activeRoomPortal.group.localToWorld(new THREE.Vector3(0, 1.5, 20));
+      const lookTarget = activeRoomPortal.group.localToWorld(new THREE.Vector3(0, 1.4, 20));
       camera.lookAt(lookTarget);
       
       if(p > 0.28) { const fadeProgress = easeInOutCubic((p - 0.28) / 0.72); portalFlash.style.transition = 'none'; portalFlash.style.opacity = String(Math.max(0, 1 - fadeProgress)); }
@@ -1032,15 +1002,13 @@
     function updatePortalRoom(t){
       if(!activeRoomPortal) return; downIndicator.classList.remove('show');
       
-      // Linear Dolly Control: Smoothly interpolate X position
-      roomCurrentX = lerp(roomCurrentX, targetRoomX, 0.08);
+      // Fine-art Camera Pan Smoothing
+      roomCurrentX = lerp(roomCurrentX, targetRoomX, 0.05);
       
-      // Set Camera Position (Fixed Z depth, variable X slide)
       const basePos = new THREE.Vector3(roomCurrentX, 1.32, roomZ);
       activeRoomPortal.group.localToWorld(camera.position.copy(basePos));
       
-      // Look Target (Slightly ahead of camera to create parallax/turn effect, or straight down corridor)
-      const lookTarget = activeRoomPortal.group.localToWorld(new THREE.Vector3(roomCurrentX * 0.5, 1.5, 20));
+      const lookTarget = activeRoomPortal.group.localToWorld(new THREE.Vector3(roomCurrentX * 0.4, 1.4, 20));
       camera.lookAt(lookTarget);
     }
 
@@ -1048,7 +1016,6 @@
       if(!activeRoomPortal) return;
       const p = Math.min((t - roomExitStart) / ROOM_EXIT_PULL_DUR, 1); const e = easeInOutCubic(p);
       
-      // Move back to entry
       const currentPos = camera.position.clone();
       camera.position.lerpVectors(currentPos, roomExitCamTo, e);
       
