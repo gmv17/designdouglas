@@ -415,7 +415,6 @@
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x0a0712, 0.026);
     const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 220);
-    // Adjusted Camera Initial Position for better framing
     camera.position.set(0, 3.2, 7.8);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -566,259 +565,130 @@
     const floorGlow = makeGlowDisc(10.6, 0xffd24a, 0.09); floorGlow.position.set(0, 0.05, 0); hubGroup.add(floorGlow);
     for(let i=0;i<4;i++){ const arm = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 5.1), new THREE.MeshStandardMaterial({ color:0x3b2260, roughness:.22, metalness:.44, emissive:0x5e2ae3, emissiveIntensity:.4 })); arm.position.y = 0.08; arm.rotation.y = i * Math.PI / 2; hubGroup.add(arm); }
 
-    // ===== CLEAN GALLERY ROOM FACTORY =====
-    function createCleanGalleryRoom(def){
+    // ===== LINEAR GALLERY ROOM FACTORY (DOLLY WALK) =====
+    function createLinearGalleryRoom(def){
       const room = new THREE.Group(); room.visible = false;
       const c = def.color;
-      const label = def.label;
       
-      const wallColor = 0xf8f6f2;
-      const floorColor = 0x1a1816;
-      const ceilingColor = 0xfaf8f5;
-      const trimColor = 0xd4d0c8;
+      // Architecture: Long Corridor
+      const corridorWidth = 6;
+      const corridorHeight = 4;
+      const corridorLength = 40; // Long gallery
 
-      const floorBase = new THREE.Mesh(
-        new THREE.BoxGeometry(14, 0.12, 18),
-        new THREE.MeshStandardMaterial({ color: floorColor, roughness: 0.72, metalness: 0.08 })
-      );
-      floorBase.position.set(0, -1.0, 8);
-      room.add(floorBase);
+      // Materials - Pure Minimalist
+      const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1816, roughness: 0.85, metalness: 0.05 });
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0xfaf8f5, roughness: 0.92, metalness: 0 }); // Pure white
+      const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 });
 
-      const floorLine = new THREE.Mesh(
-        new THREE.BoxGeometry(0.02, 0.01, 16),
-        new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.3, roughness: 0.3 })
-      );
-      floorLine.position.set(0, -0.94, 8);
-      room.add(floorLine);
+      // Floor
+      const floor = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth, 0.1, corridorLength), floorMat);
+      floor.position.set(0, -0.95, corridorLength / 2 - 5); // Centered mostly in front
+      floor.receiveShadow = true;
+      room.add(floor);
 
-      const ceiling = new THREE.Mesh(
-        new THREE.BoxGeometry(14, 0.08, 18),
-        new THREE.MeshStandardMaterial({ color: ceilingColor, roughness: 0.95, metalness: 0 })
-      );
-      ceiling.position.set(0, 4.2, 8);
+      // Ceiling
+      const ceiling = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth, 0.1, corridorLength), ceilingMat);
+      ceiling.position.set(0, corridorHeight - 0.95, corridorLength / 2 - 5);
       room.add(ceiling);
 
-      const ceilingRecess = new THREE.Mesh(
-        new THREE.BoxGeometry(10, 0.06, 14),
-        new THREE.MeshStandardMaterial({ color: 0xeae6e0, roughness: 0.9 })
-      );
-      ceilingRecess.position.set(0, 4.16, 8);
-      room.add(ceilingRecess);
+      // Left Wall
+      const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.1, corridorHeight, corridorLength), wallMat);
+      wallL.position.set(-corridorWidth / 2, corridorHeight / 2 - 0.95, corridorLength / 2 - 5);
+      room.add(wallL);
 
-      const wallMaterial = new THREE.MeshStandardMaterial({ color: wallColor, roughness: 0.88, metalness: 0 });
-      const backWall = new THREE.Mesh(new THREE.BoxGeometry(14, 5.2, 0.15), wallMaterial.clone());
-      backWall.position.set(0, 1.6, 16.9);
-      room.add(backWall);
+      // Right Wall
+      const wallR = new THREE.Mesh(new THREE.BoxGeometry(0.1, corridorHeight, corridorLength), wallMat);
+      wallR.position.set(corridorWidth / 2, corridorHeight / 2 - 0.95, corridorLength / 2 - 5);
+      room.add(wallR);
 
-      const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.15, 5.2, 18), wallMaterial.clone());
-      leftWall.position.set(-7, 1.6, 8);
-      room.add(leftWall);
+      // End Wall
+      const wallEnd = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth, corridorHeight, 0.1), wallMat);
+      wallEnd.position.set(0, corridorHeight / 2 - 0.95, corridorLength - 5);
+      room.add(wallEnd);
 
-      const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.15, 5.2, 18), wallMaterial.clone());
-      rightWall.position.set(7, 1.6, 8);
-      room.add(rightWall);
-
-      const baseboardMat = new THREE.MeshStandardMaterial({ color: trimColor, roughness: 0.6, metalness: 0.05 });
-      const baseboardBack = new THREE.Mesh(new THREE.BoxGeometry(13.8, 0.12, 0.04), baseboardMat);
-      baseboardBack.position.set(0, -0.94, 16.82);
-      room.add(baseboardBack);
-
-      const baseboardL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 17.8), baseboardMat);
-      baseboardL.position.set(-6.92, -0.94, 8);
-      room.add(baseboardL);
-
-      const baseboardR = baseboardL.clone();
-      baseboardR.position.x = 6.92;
-      room.add(baseboardR);
-
+      // Entry Portal Frame
       const entryFrame = new THREE.Mesh(
-        new THREE.BoxGeometry(2.8, 3.8, 0.08),
-        new THREE.MeshStandardMaterial({ color: 0x2a2825, roughness: 0.25, metalness: 0.15 })
+        new THREE.BoxGeometry(2.2, 3.2, 0.15),
+        new THREE.MeshStandardMaterial({ color: 0x2a2825, roughness: 0.2, metalness: 0.2 })
       );
-      entryFrame.position.set(0, 0.9, 0.1);
+      entryFrame.position.set(0, 0.65, 0.1);
       room.add(entryFrame);
 
-      const entryGlow = makeGlowDisc(2.2, c, 0.12);
-      entryGlow.position.set(0, 0.9, 0.2);
-      room.add(entryGlow);
+      // Artworks (Large Frames) along the walls
+      function createLargeFrame(x, y, z, w, h, rotY = 0) {
+        const frameGroup = new THREE.Group();
+        
+        // Frame Border
+        const border = 0.05;
+        const frameMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(w + border * 2, h + border * 2, 0.05),
+          new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4, metalness: 0.1 })
+        );
+        frameGroup.add(frameMesh);
 
-      function createExhibitionFrame(x, y, z, w, h, rotY = 0, withArt = true) {
-        const frame = new THREE.Group();
-        const frameDepth = 0.03;
-        const frameWidth = 0.04;
-        const frameMat = new THREE.MeshStandardMaterial({ color: 0x1a1816, roughness: 0.35, metalness: 0.1 });
-        
-        const topF = new THREE.Mesh(new THREE.BoxGeometry(w + frameWidth * 2, frameWidth, frameDepth), frameMat);
-        topF.position.y = h / 2 + frameWidth / 2;
-        frame.add(topF);
-        
-        const bottomF = topF.clone();
-        bottomF.position.y = -h / 2 - frameWidth / 2;
-        frame.add(bottomF);
-        
-        const leftF = new THREE.Mesh(new THREE.BoxGeometry(frameWidth, h, frameDepth), frameMat);
-        leftF.position.x = -w / 2 - frameWidth / 2;
-        frame.add(leftF);
-        
-        const rightF = leftF.clone();
-        rightF.position.x = w / 2 + frameWidth / 2;
-        frame.add(rightF);
-        
+        // Canvas / Art
         const canvas = new THREE.Mesh(
-          new THREE.BoxGeometry(w, h, 0.015),
-          new THREE.MeshStandardMaterial({ color: 0xf5f3ef, roughness: 0.82, metalness: 0 })
+          new THREE.BoxGeometry(w, h, 0.02),
+          new THREE.MeshStandardMaterial({ color: 0xf5f3ef, roughness: 0.8, metalness: 0 }) // White canvas
         );
-        canvas.position.z = 0.01;
-        frame.add(canvas);
+        canvas.position.z = 0.02;
+        frameGroup.add(canvas);
+
+        // Abstract Art (Procedural)
+        const artGroup = new THREE.Group();
+        artGroup.position.z = 0.03;
         
-        if (withArt) {
-          const artGroup = new THREE.Group();
-          artGroup.position.z = 0.02;
-          const mainBlock = new THREE.Mesh(
-            new THREE.BoxGeometry(w * 0.65, h * 0.45, 0.005),
-            new THREE.MeshStandardMaterial({ color: c, roughness: 0.4, metalness: 0.1, emissive: c, emissiveIntensity: 0.15 })
+        // Large color blocks simulating art
+        const shapes = [];
+        for (let i = 0; i < 3; i++) {
+          const shapeW = w * (0.3 + Math.random() * 0.4);
+          const shapeH = h * (0.2 + Math.random() * 0.4);
+          const shape = new THREE.Mesh(
+            new THREE.BoxGeometry(shapeW, shapeH, 0.01),
+            new THREE.MeshStandardMaterial({ 
+              color: i === 0 ? c : (i === 1 ? 0x2a2825 : 0xe0e0e0), 
+              roughness: 0.5, 
+              metalness: 0.1 
+            })
           );
-          mainBlock.position.set(w * -0.12, h * 0.15, 0);
-          artGroup.add(mainBlock);
-          
-          const secBlock = new THREE.Mesh(
-            new THREE.BoxGeometry(w * 0.35, h * 0.55, 0.005),
-            new THREE.MeshStandardMaterial({ color: 0x2a2825, roughness: 0.6 })
+          shape.position.set(
+            (Math.random() - 0.5) * w * 0.5,
+            (Math.random() - 0.5) * h * 0.5,
+            0
           );
-          secBlock.position.set(w * 0.22, h * -0.08, 0);
-          artGroup.add(secBlock);
-          
-          const line = new THREE.Mesh(
-            new THREE.BoxGeometry(w * 0.8, h * 0.03, 0.006),
-            new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.4 })
-          );
-          line.position.set(0, h * -0.32, 0);
-          artGroup.add(line);
-          frame.add(artGroup);
+          artGroup.add(shape);
         }
-        
-        frame.position.set(x, y, z);
-        frame.rotation.y = rotY;
-        room.add(frame);
-        return frame;
-      }
+        frameGroup.add(artGroup);
 
-      createExhibitionFrame(0, 2.0, 16.75, 3.2, 2.4, Math.PI, true);
-      createExhibitionFrame(-4.2, 1.9, 16.75, 1.8, 2.2, Math.PI, true);
-      createExhibitionFrame(4.2, 1.9, 16.75, 1.8, 2.2, Math.PI, true);
-      createExhibitionFrame(-2.1, 1.4, 16.75, 1.4, 1.0, Math.PI, true);
-      createExhibitionFrame(2.1, 1.4, 16.75, 1.4, 1.0, Math.PI, true);
-      createExhibitionFrame(-6.85, 2.1, 6, 2.2, 2.8, Math.PI / 2, true);
-      createExhibitionFrame(-6.85, 2.0, 11, 1.6, 2.0, Math.PI / 2, true);
-      createExhibitionFrame(6.85, 2.1, 6, 2.2, 2.8, -Math.PI / 2, true);
-      createExhibitionFrame(6.85, 2.0, 11, 1.6, 2.0, -Math.PI / 2, true);
+        frameGroup.position.set(x, y, z);
+        frameGroup.rotation.y = rotY;
+        room.add(frameGroup);
 
-      function createDisplayPedestal(x, z, h = 0.9) {
-        const group = new THREE.Group();
-        const body = new THREE.Mesh(
-          new THREE.BoxGeometry(0.5, h, 0.5),
-          new THREE.MeshStandardMaterial({ color: 0xf0ede8, roughness: 0.5, metalness: 0.05 })
-        );
-        body.position.y = h / 2 - 1;
-        body.castShadow = true;
-        group.add(body);
-        
-        const top = new THREE.Mesh(
-          new THREE.BoxGeometry(0.52, 0.02, 0.52),
-          new THREE.MeshStandardMaterial({ color: c, roughness: 0.3, metalness: 0.2, emissive: c, emissiveIntensity: 0.2 })
-        );
-        top.position.y = h - 1 + 0.01;
-        group.add(top);
-        
-        const objGeo = label === 'Editorial' 
-          ? new THREE.BoxGeometry(0.22, 0.28, 0.04)
-          : label === 'Branding'
-          ? new THREE.TorusGeometry(0.12, 0.04, 16, 32)
-          : new THREE.SphereGeometry(0.12, 24, 24);
-        
-        const obj = new THREE.Mesh(
-          objGeo,
-          new THREE.MeshStandardMaterial({ color: c, roughness: 0.18, metalness: 0.6, emissive: c, emissiveIntensity: 0.25 })
-        );
-        obj.position.y = h - 1 + 0.18;
-        obj.castShadow = true;
-        group.add(obj);
-        
-        group.position.set(x, 0, z);
-        room.add(group);
-        return group;
-      }
-
-      createDisplayPedestal(0, 7.5, 0.95);
-      createDisplayPedestal(-3, 5, 0.8);
-      createDisplayPedestal(3, 5, 0.8);
-
-      const ambientR = new THREE.AmbientLight(0xfff8f0, 0.6);
-      room.add(ambientR);
-
-      function createSpotlight(x, y, z, targetX, targetY, targetZ, intensity = 2.5) {
-        const spot = new THREE.SpotLight(0xfff5e6, intensity, 12, Math.PI / 6, 0.4, 1.2);
-        spot.position.set(x, y, z);
-        spot.target.position.set(targetX, targetY, targetZ);
+        // Spotlight for this artwork
+        const spot = new THREE.SpotLight(0xfff5e6, 2.5, 8, Math.PI / 5, 0.6, 1.5);
+        spot.position.set(x, y + 2, z + 1.5); // Slightly in front
+        spot.target.position.set(x, y, z);
         spot.castShadow = true;
-        spot.shadow.mapSize.set(512, 512);
+        spot.shadow.mapSize.set(256, 256);
         room.add(spot);
         room.add(spot.target);
-        return spot;
       }
 
-      createSpotlight(0, 3.8, 14, 0, 2.0, 16.75, 3.0);
-      createSpotlight(-4.2, 3.8, 14, -4.2, 1.9, 16.75, 2.2);
-      createSpotlight(4.2, 3.8, 14, 4.2, 1.9, 16.75, 2.2);
-      createSpotlight(-5.5, 3.8, 6, -6.85, 2.1, 6, 2.5);
-      createSpotlight(5.5, 3.8, 6, 6.85, 2.1, 6, 2.5);
+      // Place artworks along the corridor
+      // Left Wall
+      createLargeFrame(-corridorWidth/2 + 0.06, 1.8, 5, 2.0, 2.8, Math.PI / 2);
+      createLargeFrame(-corridorWidth/2 + 0.06, 1.8, 15, 2.4, 2.0, Math.PI / 2);
+      createLargeFrame(-corridorWidth/2 + 0.06, 1.8, 25, 1.8, 2.4, Math.PI / 2);
 
-      const pedestalLight = new THREE.PointLight(c, 1.2, 8, 2);
-      pedestalLight.position.set(0, 1.2, 7.5);
-      room.add(pedestalLight);
+      // Right Wall
+      createLargeFrame(corridorWidth/2 - 0.06, 1.8, 10, 2.4, 2.0, -Math.PI / 2);
+      createLargeFrame(corridorWidth/2 - 0.06, 1.8, 20, 2.0, 2.8, -Math.PI / 2);
+      createLargeFrame(corridorWidth/2 - 0.06, 1.8, 30, 2.2, 2.2, -Math.PI / 2);
 
-      const warmFill = new THREE.PointLight(0xfff4e6, 0.8, 20, 2);
-      warmFill.position.set(0, 3.5, 10);
-      room.add(warmFill);
+      // Ambient Light
+      const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+      room.add(ambient);
 
-      if (label === 'Editorial') {
-        for (let i = 0; i < 3; i++) {
-          const book = new THREE.Mesh(
-            new THREE.BoxGeometry(0.18, 0.24, 0.04),
-            new THREE.MeshStandardMaterial({ color: c, roughness: 0.4, metalness: 0.1, emissive: c, emissiveIntensity: 0.1 })
-          );
-          book.position.set(-2 + i * 0.25, 0.02, 12);
-          book.rotation.x = -0.15;
-          book.rotation.z = (Math.random() - 0.5) * 0.1;
-          room.add(book);
-        }
-      }
-
-      if (label === 'Lettering') {
-        const textLine = new THREE.Mesh(
-          new THREE.BoxGeometry(4.5, 0.02, 0.02),
-          new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.5 })
-        );
-        textLine.position.set(0, 3.2, 16.72);
-        room.add(textLine);
-      }
-
-      const pGeo = new THREE.BufferGeometry();
-      const pPos = new Float32Array(12 * 3);
-      for (let i = 0; i < 12; i++) {
-        pPos[i * 3] = (Math.random() - 0.5) * 10;
-        pPos[i * 3 + 1] = Math.random() * 3.5 + 0.5;
-        pPos[i * 3 + 2] = Math.random() * 12 + 3;
-      }
-      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-      const pMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.015, transparent: true, opacity: 0.15, depthWrite: false });
-      const pts = new THREE.Points(pGeo, pMat);
-      room.add(pts);
-
-      room.userData.roomLight = pedestalLight;
-      room.userData.warmLight = warmFill;
-      room.userData.particles = pts;
-      
       return room;
     }
 
@@ -865,7 +735,11 @@
       const base = new THREE.Mesh(new THREE.CylinderGeometry(1.75,1.95,0.18,40), new THREE.MeshStandardMaterial({ color:0x221533, roughness:.32, metalness:.34, emissive:def.color, emissiveIntensity:.16 })); base.position.y = -0.9; g.add(base);
       const txt = makeTextSprite(def.label, '#fff8e8'); txt.position.set(0,2.46,0); g.add(txt);
       const mockups = createPortalMockups(def); mockups.position.set(0, 0.05, 1.55); g.add(mockups);
-      const room = createCleanGalleryRoom(def); room.position.set(0, -0.05, 1.45); g.add(room);
+      
+      // Use Linear Gallery
+      const room = createLinearGalleryRoom(def); 
+      room.position.set(0, -0.05, 1.45); 
+      g.add(room);
 
       g.userData.portalIndex = index;
       portalGroups.push({ group:g, glow:innerGlow, arch, text:txt, leftPillar:pL, rightPillar:pR, base, seed:index * 0.8, baseY:g.position.y, data:def, innerGlow, mockups, room });
@@ -927,7 +801,6 @@
 
     // ===== TUNNEL =====
     const tunnel = new THREE.Group(); scene.add(tunnel); tunnel.visible = false;
-    // Lowered the beam slightly to not obscure the mascot at the very start
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.42, 2.7, 16.8, 28, 1, true), new THREE.MeshBasicMaterial({ color:0x7a39ff, transparent:true, opacity:.12, side:THREE.DoubleSide, depthWrite:false })); beam.position.set(0, hubY/2 + 0.1, 0); tunnel.add(beam);
     const dropRings = [];
     for(let i=0;i<7;i++){ const ring = new THREE.Mesh(new THREE.TorusGeometry(1.55 + i * 0.08, 0.045, 16, 80), new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xffd24a : 0x7a39ff, transparent:true, opacity:.46 - i * .04 })); ring.rotation.x = Math.PI / 2; ring.position.y = lerp(heroY + 0.7, hubY + 4.2, i / 6); dropRings.push(ring); tunnel.add(ring); }
@@ -953,11 +826,12 @@
     let orbitEnabled = false; let isPointerDown = false;
     let orbitTheta = 0; let orbitPhi = 0.28; let targetOrbitTheta = 0; let targetOrbitPhi = 0.28; let orbitRadius = 10.2; let targetOrbitRadius = 10.2;
     const hubTarget = new THREE.Vector3(0, hubY + 1.9, 0);
-    let roomOrbitTheta = 0; let roomOrbitPhi = 0; let targetRoomTheta = 0; let targetRoomPhi = 0; let roomOrbitThetaCenter = 0;
-    let roomOrbitRadius = 5.5;
-    const roomOrbitTargetLocal = new THREE.Vector3(0, 1.5, 6.5);
-    const roomOrbitTargetWorld = new THREE.Vector3();
-
+    
+    // Linear Room Controls
+    let roomTargetX = 0; 
+    let roomCurrentX = 0;
+    const roomZ = 4; // Fixed depth for camera in corridor
+    
     const pointer = new THREE.Vector2(); const raycaster = new THREE.Raycaster();
     let hoveredPortal = null; let selectedPortal = null; let clickTargetPortal = null;
     const portalCaption = document.getElementById('portalCaption');
@@ -989,10 +863,13 @@
       if(state === 'hub' && orbitEnabled){
         targetOrbitTheta -= e.movementX * 0.0038; targetOrbitPhi += e.movementY * 0.0028; targetOrbitPhi = Math.max(-0.18, Math.min(0.72, targetOrbitPhi));
       } else if(state === 'portalRoom') {
-        targetRoomTheta -= e.movementX * 0.0038; targetRoomPhi += e.movementY * 0.0028;
-        const maxThetaSwing = Math.PI / 2;
-        targetRoomTheta = Math.max(roomOrbitThetaCenter - maxThetaSwing, Math.min(roomOrbitThetaCenter + maxThetaSwing, targetRoomTheta));
-        targetRoomPhi = Math.max(-0.35, Math.min(0.35, targetRoomPhi));
+        // Linear Dolly Movement
+        // Dragging Left/Right moves camera sideways (X axis)
+        targetRoomX -= e.movementX * 0.015; 
+        
+        // Clamp movement to corridor width (approx width/2 - margin)
+        const maxSlide = 2.0; 
+        targetRoomX = Math.max(-maxSlide, Math.min(maxSlide, targetRoomX));
       }
     });
     renderer.domElement.addEventListener('click', () => { if(state === 'hub' && orbitEnabled && hoveredPortal && dragDist < 8) startPortalSuck(hoveredPortal); });
@@ -1060,6 +937,9 @@
     const mascotAboutFrom = new THREE.Vector3(); const mascotAboutTo = new THREE.Vector3(0, hubY - 11.12, 0.06);
     const aboutLiftPoint = new THREE.Vector3(0, hubY + 3.9, 1.3);
     const aboutDriftPoint = new THREE.Vector3(0, hubY - 5.6, 2.1);
+    
+    // Linear Room State
+    let targetRoomX = 0;
 
     function setPortalShellVisibility(item, visible){ item.arch.visible = visible; item.leftPillar.visible = visible; item.rightPillar.visible = visible; item.base.visible = visible; item.text.visible = visible; item.glow.visible = visible; item.innerGlow.visible = visible; }
     function setAllPortalShellsVisibility(visible){ portalGroups.forEach(p => { setPortalShellVisibility(p, visible); p.mockups.visible = visible; }); }
@@ -1068,27 +948,30 @@
       activeRoomPortal = item; item.room.visible = true; setAllPortalShellsVisibility(false); document.body.classList.remove('portalHover'); document.body.classList.add('portalRoomState'); roomBackBtn.classList.add('show');
       roomInfoTitle.textContent = item.data.label; roomInfoTitle.style.color = item.data.cssColor; roomInfoDesc.textContent = item.data.desc; roomInfoCount.textContent = item.data.projectCount + ' projetos'; roomInfoYear.textContent = item.data.yearRange; roomInfo.classList.add('show');
       roomEnterStart = clock.getElapsedTime();
-      const entryPos = item.group.localToWorld(new THREE.Vector3(0, 1.32, 1.55)); const entryLook = item.group.localToWorld(new THREE.Vector3(0, 1.15, 4.5));
-      camera.position.copy(entryPos); camera.lookAt(entryLook);
-      roomCamFrom.copy(entryPos); roomLookFrom.copy(entryLook);
-      item.group.localToWorld(roomOrbitTargetWorld.copy(roomOrbitTargetLocal));
-      const toCam = new THREE.Vector3().subVectors(entryPos, roomOrbitTargetWorld);
-      roomOrbitRadius = toCam.length();
-      targetRoomPhi = Math.asin(toCam.y / roomOrbitRadius); targetRoomTheta = Math.atan2(toCam.x, toCam.z);
-      roomOrbitThetaCenter = targetRoomTheta;
-      roomOrbitTheta = targetRoomTheta; roomOrbitPhi = targetRoomPhi;
+      
+      // Initial Position (Portal Entry)
+      const entryPos = item.group.localToWorld(new THREE.Vector3(0, 1.32, 1.55)); 
+      camera.position.copy(entryPos); 
+      camera.lookAt(item.group.localToWorld(new THREE.Vector3(0, 1.5, 10))); // Look down corridor
+      
+      roomCamFrom.copy(entryPos); 
+      roomLookFrom.set(0, 1.5, 10); 
+      
+      // Reset Linear Controls
+      targetRoomX = 0;
+      roomCurrentX = 0;
+
       state = 'portalRoomEnter';
     }
 
     function exitPortalRoom(){
       if(!activeRoomPortal) return; roomExitStart = clock.getElapsedTime();
       roomCamFrom.copy(camera.position);
-      activeRoomPortal.group.localToWorld(roomOrbitTargetWorld.copy(roomOrbitTargetLocal));
-      roomLookFrom.copy(roomOrbitTargetWorld);
-      roomExitLookAt.copy(roomOrbitTargetWorld);
-      roomExitCamTo.copy(roomCamFrom);
-      roomExitCamTo.z -= 4.6;
-      roomExitCamTo.y += 0.12;
+      // Calculate exit position
+      const exitPos = activeRoomPortal.group.localToWorld(new THREE.Vector3(0, 1.32, 1.55));
+      roomExitCamTo.copy(exitPos);
+      roomExitLookAt.set(0, 1.5, 0); // Look back at portal
+      
       roomBackBtn.classList.remove('show'); roomInfo.classList.remove('show'); document.body.classList.remove('portalHover');
       const ec = activeRoomPortal.data.cssColor;
       portalFlash.style.transition = 'none';
@@ -1126,29 +1009,51 @@
     function updatePortalRoomEnter(t){
       if(!activeRoomPortal) return; downIndicator.classList.remove('show');
       const p = Math.min((t - roomEnterStart) / ROOM_TRAVEL_DUR, 1); const e = easeInOutCubic(p);
-      const offset = new THREE.Vector3(); offset.setFromSphericalCoords(roomOrbitRadius, Math.PI/2 - targetRoomPhi, targetRoomTheta);
-      const destPos = roomOrbitTargetWorld.clone().add(offset);
-      camera.position.lerpVectors(roomCamFrom, destPos, e); camera.lookAt(roomOrbitTargetWorld);
-      activeRoomPortal.room.userData.roomLight.intensity = 1.0 + Math.sin(t * 2.1) * 0.1;
+      
+      // Move camera forward into the corridor (Z axis in local space)
+      // Start at entryPos (near 0), move to roomZ (4)
+      const startZ = 1.55;
+      const endZ = roomZ; // Defined in controls section
+      
+      // Transform target positions to world space
+      const startPos = activeRoomPortal.group.localToWorld(new THREE.Vector3(0, 1.32, startZ));
+      const endPos = activeRoomPortal.group.localToWorld(new THREE.Vector3(0, 1.32, endZ));
+      
+      camera.position.lerpVectors(startPos, endPos, e);
+      
+      // Look down the corridor
+      const lookTarget = activeRoomPortal.group.localToWorld(new THREE.Vector3(0, 1.5, 20));
+      camera.lookAt(lookTarget);
+      
       if(p > 0.28) { const fadeProgress = easeInOutCubic((p - 0.28) / 0.72); portalFlash.style.transition = 'none'; portalFlash.style.opacity = String(Math.max(0, 1 - fadeProgress)); }
       if(p >= 1){ portalFlash.style.opacity = '0'; state = 'portalRoom'; renderer.domElement.style.cursor = 'grab'; }
     }
 
     function updatePortalRoom(t){
       if(!activeRoomPortal) return; downIndicator.classList.remove('show');
-      roomOrbitTheta = lerp(roomOrbitTheta, targetRoomTheta, 0.08); roomOrbitPhi = lerp(roomOrbitPhi, targetRoomPhi, 0.08);
-      const offset = new THREE.Vector3(); offset.setFromSphericalCoords(roomOrbitRadius, Math.PI/2 - roomOrbitPhi, roomOrbitTheta);
-      camera.position.copy(roomOrbitTargetWorld).add(offset); camera.lookAt(roomOrbitTargetWorld);
-      activeRoomPortal.room.userData.roomLight.intensity = 0.9 + Math.sin(t * 1.8) * 0.08; activeRoomPortal.room.userData.warmLight.intensity = 0.7 + Math.sin(t * 1.4) * 0.05;
-      const pts = activeRoomPortal.room.userData.particles; if(pts){ const pos = pts.geometry.attributes.position.array; for(let i=0;i<pos.length/3;i++){ pos[i*3+1] += 0.001; if(pos[i*3+1] > 3.5) pos[i*3+1] = 0.5; } pts.geometry.attributes.position.needsUpdate = true; }
+      
+      // Linear Dolly Control: Smoothly interpolate X position
+      roomCurrentX = lerp(roomCurrentX, targetRoomX, 0.08);
+      
+      // Set Camera Position (Fixed Z depth, variable X slide)
+      const basePos = new THREE.Vector3(roomCurrentX, 1.32, roomZ);
+      activeRoomPortal.group.localToWorld(camera.position.copy(basePos));
+      
+      // Look Target (Slightly ahead of camera to create parallax/turn effect, or straight down corridor)
+      const lookTarget = activeRoomPortal.group.localToWorld(new THREE.Vector3(roomCurrentX * 0.5, 1.5, 20));
+      camera.lookAt(lookTarget);
     }
 
     function updatePortalRoomExit(t){
       if(!activeRoomPortal) return;
       const p = Math.min((t - roomExitStart) / ROOM_EXIT_PULL_DUR, 1); const e = easeInOutCubic(p);
-      camera.position.lerpVectors(roomCamFrom, roomExitCamTo, e);
+      
+      // Move back to entry
+      const currentPos = camera.position.clone();
+      camera.position.lerpVectors(currentPos, roomExitCamTo, e);
+      
       camera.lookAt(roomExitLookAt);
-      activeRoomPortal.room.userData.roomLight.intensity = 0.8 + Math.sin(t * 1.6) * 0.05;
+
       const flashIn = Math.min(p / 0.55, 1);
       portalFlash.style.opacity = String(easeInCubic(flashIn));
       if(p >= 1){
@@ -1294,7 +1199,6 @@
     }
 
     // ===== ANIMATION =====
-    // Adjusted Camera Height for Hero to see the mascot better initially
     const heroCamPos = new THREE.Vector3(0, 3.2, 7.8); const heroCamLook = new THREE.Vector3(0, 1.6, 0);
     function updateHero(t){
       const idleAmp = reducedMotion ? 0.02 : 0.08;
@@ -1307,7 +1211,6 @@
       const p = Math.min((t - transitionStart) / dur, 1);
       const e = skipMode ? 1 : easeInOutCubic(p);
 
-      // Camera movement
       camera.position.set(
         lerp(heroCamPos.x, hubCamPos.x, e), 
         lerp(heroCamPos.y, hubCamPos.y, e), 
@@ -1316,80 +1219,47 @@
       const lookY = lerp(heroCamLook.y, hubCamLook.y, e);
       camera.lookAt(0, lookY, 0);
 
-      // Mascot Physics Animation
       if(!skipMode){
         const startY = heroY + 1.48;
         const endY = hubY + 1.52;
         let my = startY;
 
-        // Ensure mascot is visible and full scale at start
         mascot.visible = true;
         setGroupOpacity(mascot, 1);
         mascot.scale.setScalar(1);
 
-        // Phases: Anticipation -> Fall -> Impact
         if(p < 0.12){
-          // 1. Anticipation: Float UP slightly
           const ant = easeOutCubic(p / 0.12);
-          my = startY + ant * 0.8; // Float up
-          mascot.rotation.x = -ant * 0.25; // Tilt back looking up
-          mascot.scale.setScalar(1 + ant * 0.05); // Inhale
+          my = startY + ant * 0.8;
+          mascot.rotation.x = -ant * 0.25;
+          mascot.scale.setScalar(1 + ant * 0.05);
         } else if(p < 0.85){
-          // 2. The Fall: Accelerate down
           const fallP = (p - 0.12) / 0.73;
-          // Use easeInCubic for gravity acceleration feel
           const fallE = easeInCubic(fallP);
-          
-          // Calculate fall curve
           const peakY = startY + 0.8;
           my = lerp(peakY, endY, fallE);
-          
-          // Add a slight overshoot to make it feel fast
-          if(fallE > 0.8) {
-             my -= (fallE - 0.8) * 2.5; 
-          }
-
-          // Rotation: Fast spin during fall
+          if(fallE > 0.8) my -= (fallE - 0.8) * 2.5;
           mascot.rotation.y += 0.06 + fallP * 0.15;
-          mascot.rotation.x = lerp(-0.25, 0.4, fallE); // Tumble forward
-          mascot.rotation.z = Math.sin(fallP * Math.PI * 6) * 0.2; // Wobble
-
-          // Stretch: Elongate along Y axis
+          mascot.rotation.x = lerp(-0.25, 0.4, fallE);
+          mascot.rotation.z = Math.sin(fallP * Math.PI * 6) * 0.2;
           const stretch = 1 + fallE * 0.4;
           mascot.scale.set(1 / Math.sqrt(stretch), stretch, 1 / Math.sqrt(stretch));
-
         } else {
-          // 3. Impact & Settle
           const landP = (p - 0.85) / 0.15;
-          
-          // Position: Settle into final Y with a bounce
           const bounce = Math.sin(landP * Math.PI * 2.5) * (1 - landP) * 0.8;
           my = endY + bounce;
-
-          // Rotation: Settle
           mascot.rotation.x *= (1 - landP * 0.2);
           mascot.rotation.z *= (1 - landP);
-          
-          // Scale: Squash & Stretch (Squash on impact, then settle)
           const squash = 1 - Math.sin(landP * Math.PI) * 0.25 * (1 - landP);
-          const stretchSettle = 1 + Math.sin(landP * Math.PI * 2) * 0.1 * (1 - landP);
-          mascot.scale.set(
-            1 + (1 - squash) * 0.8, 
-            squash, 
-            1 + (1 - squash) * 0.8
-          );
+          mascot.scale.set(1 + (1 - squash) * 0.8, squash, 1 + (1 - squash) * 0.8);
         }
-
         mascot.position.y = my;
-        
       } else {
-        // Skip mode logic
         mascot.position.set(0, lerp(heroY + 1.48, hubY + 1.52, 1), 0);
         mascot.rotation.y += 0.01;
         mascot.scale.setScalar(1);
       }
 
-      // Lights
       heroSpot.intensity = lerp(4.2, 0.8, e);
       heroFillA.intensity = lerp(2.1, 0.4, e);
       heroFillB.intensity = lerp(1.5, 0.22, e);
