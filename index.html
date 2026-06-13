@@ -565,114 +565,6 @@
     const floorGlow = makeGlowDisc(10.6, 0xffd24a, 0.09); floorGlow.position.set(0, 0.05, 0); hubGroup.add(floorGlow);
     for(let i=0;i<4;i++){ const arm = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 5.1), new THREE.MeshStandardMaterial({ color:0x3b2260, roughness:.22, metalness:.44, emissive:0x5e2ae3, emissiveIntensity:.4 })); arm.position.y = 0.08; arm.rotation.y = i * Math.PI / 2; hubGroup.add(arm); }
 
-    // ===== NEW CLEAN & SERIOUS GALLERY ROOM FACTORY =====
-    function createLinearGalleryRoom(def){
-      const room = new THREE.Group(); room.visible = false;
-      const c = def.color;
-      
-      const corridorWidth = 6.5;
-      const corridorHeight = 4.5;
-      const corridorLength = 45; 
-
-      // Fine Art / Architectural Materials (Seriadas e sóbrias)
-      const floorMat = new THREE.MeshStandardMaterial({ color: 0x252526, roughness: 0.55, metalness: 0.12 }); // Concreto polido escuro
-      const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f7, roughness: 0.9, metalness: 0 });     // Off-white fosco elegante
-      const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x181819, roughness: 0.95 });               // Teto técnico escuro
-
-      // Floor
-      const floor = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth, 0.1, corridorLength), floorMat);
-      floor.position.set(0, -0.95, corridorLength / 2 - 5);
-      floor.receiveShadow = true;
-      room.add(floor);
-
-      // Ceiling
-      const ceiling = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth, 0.1, corridorLength), ceilingMat);
-      ceiling.position.set(0, corridorHeight - 0.95, corridorLength / 2 - 5);
-      room.add(ceiling);
-
-      // Left Wall
-      const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.1, corridorHeight, corridorLength), wallMat);
-      wallL.position.set(-corridorWidth / 2, corridorHeight / 2 - 0.95, corridorLength / 2 - 5);
-      wallL.receiveShadow = true;
-      room.add(wallL);
-
-      // Right Wall
-      const wallR = new THREE.Mesh(new THREE.BoxGeometry(0.1, corridorHeight, corridorLength), wallMat);
-      wallR.position.set(corridorWidth / 2, corridorHeight / 2 - 0.95, corridorLength / 2 - 5);
-      wallR.receiveShadow = true;
-      room.add(wallR);
-
-      // End Wall
-      const wallEnd = new THREE.Mesh(new THREE.BoxGeometry(corridorWidth, corridorHeight, 0.1), wallMat);
-      wallEnd.position.set(0, corridorHeight / 2 - 0.95, corridorLength - 5);
-      wallEnd.receiveShadow = true;
-      room.add(wallEnd);
-
-      // Clean Framing Function
-      function createLargeFrame(x, y, z, w, h, rotY = 0) {
-        const frameGroup = new THREE.Group();
-        
-        // Minimal Ultra-Thin Black Frame
-        const border = 0.03;
-        const frameMesh = new THREE.Mesh(
-          new THREE.BoxGeometry(w + border * 2, h + border * 2, 0.04),
-          new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.6, metalness: 0.1 })
-        );
-        frameMesh.castShadow = true;
-        frameGroup.add(frameMesh);
-
-        // Passepartout (White Matting)
-        const matting = new THREE.Mesh(
-          new THREE.BoxGeometry(w, h, 0.01),
-          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0 })
-        );
-        matting.position.z = 0.02;
-        frameGroup.add(matting);
-
-        // Fine Art Content Placeholder
-        const artwork = new THREE.Mesh(
-          new THREE.BoxGeometry(w * 0.75, h * 0.75, 0.01),
-          new THREE.MeshStandardMaterial({ 
-            color: 0x1f1f22, 
-            roughness: 0.4, 
-            metalness: 0.05,
-            emissive: c,
-            emissiveIntensity: 0.04 
-          })
-        );
-        artwork.position.z = 0.026;
-        frameGroup.add(artwork);
-
-        frameGroup.position.set(x, y, z);
-        frameGroup.rotation.y = rotY;
-        room.add(frameGroup);
-
-        // Individual Studio Spotlight per Artwork
-        const spot = new THREE.SpotLight(0xfff8ee, 3.8, 12, Math.PI / 4.8, 0.5, 1.2);
-        spot.position.set(x * 0.82, y + 2.0, z + (x > 0 ? -1.2 : 1.2)); 
-        spot.target = frameGroup;
-        spot.castShadow = true;
-        spot.shadow.mapSize.set(512, 512);
-        spot.shadow.bias = -0.001;
-        room.add(spot);
-      }
-
-      // Symmetrical & Clean Layout along the walls
-      createLargeFrame(-corridorWidth/2 + 0.06, 1.6, 6, 2.2, 2.8, Math.PI / 2);
-      createLargeFrame(-corridorWidth/2 + 0.06, 1.6, 16, 2.6, 2.0, Math.PI / 2);
-      createLargeFrame(-corridorWidth/2 + 0.06, 1.6, 26, 1.8, 2.4, Math.PI / 2);
-
-      createLargeFrame(corridorWidth/2 - 0.06, 1.6, 11, 2.6, 2.0, -Math.PI / 2);
-      createLargeFrame(corridorWidth/2 - 0.06, 1.6, 21, 2.2, 2.8, -Math.PI / 2);
-      createLargeFrame(corridorWidth/2 - 0.06, 1.6, 31, 2.4, 2.4, -Math.PI / 2);
-
-      // Soter/Ambient light setup for art gallery
-      const softStudioLight = new THREE.AmbientLight(0xffffff, 0.55);
-      room.add(softStudioLight);
-
-      return room;
-    }
-
     // ===== PORTAL DEFINITIONS =====
     const portalDefs = [
       { label:'Editorial', color:0xffd24a, pos:[0, 1.6, -5.2], desc:'Livros, capas, composições.', cssColor:'#ffd24a', projectCount: 12, yearRange: '2022—2024' },
@@ -717,8 +609,8 @@
       const txt = makeTextSprite(def.label, '#fff8e8'); txt.position.set(0,2.46,0); g.add(txt);
       const mockups = createPortalMockups(def); mockups.position.set(0, 0.05, 1.55); g.add(mockups);
       
-      // Implement Clean Gallery Architectural Viewports
-      const room = createLinearGalleryRoom(def); 
+      // Room placeholder (galleries removed)
+      const room = new THREE.Group();
       room.position.set(0, -0.05, 1.45); 
       g.add(room);
 
