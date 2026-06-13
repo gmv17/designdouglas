@@ -112,15 +112,24 @@
     body.portalRoomState .corners, body.aboutOpen .corners{opacity:.28}
     @media (max-width: 860px){ .hero-copy{max-width:calc(100vw - 40px);left:20px;bottom:28px} .hero-copy p{max-width:100%} .hero-meta{right:16px;top:16px;gap:8px} }
     @media (max-width: 640px){ .hero-copy h1{font-size:clamp(2.4rem, 11  vw, 4.2rem)} .cta-row{flex-direction:column;align-items:flex-start} .cta,.ghost{width:100%;justify-content:center;text-align:center} .hero-meta{display:none} }
-    .room-back-btn{
-      position:fixed;left:22px;top:22px;z-index:120;appearance:none;border:none;background:rgba(10,8,18,.5);
-      color:rgba(255,255,255,.88);font:500 11px/1 'Inter',sans-serif;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;
-      padding:13px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(14px);
-      opacity:0;pointer-events:none;transform:translateY(-8px);
+    
+    /* Buttons */
+    .room-back-btn, .hero-return-btn {
+      position:fixed; left:22px; top:22px; z-index:120; appearance:none; border:none; background:rgba(10,8,18,.5);
+      color:rgba(255,255,255,.88); font:500 11px/1 'Inter',sans-serif; letter-spacing:.18em; text-transform:uppercase; cursor:pointer;
+      padding:13px 18px; border-radius:999px; border:1px solid rgba(255,255,255,.16); backdrop-filter:blur(14px);
+      opacity:0; pointer-events:none; transform:translateY(-8px);
       transition:opacity .35s ease, transform .35s ease, background .25s ease, border-color .25s ease;
     }
-    .room-back-btn.show{opacity:1;pointer-events:auto;transform:translateY(0)}
-    .room-back-btn:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.24)}
+    .room-back-btn.show, .hero-return-btn.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+    .room-back-btn:hover, .hero-return-btn:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.24)}
+    .hero-return-btn {
+      /* Styling to match but slightly distinct */
+      background:rgba(122,57,255,0.2); 
+      border-color:rgba(122,57,255,0.4);
+    }
+    .hero-return-btn:hover { background:rgba(122,57,255,0.4); border-color:rgba(122,57,255,0.6); }
+
     .room-info{
       position:fixed;right:22px;top:22px;z-index:120;padding:16px 22px;border-radius:18px;
       border:1px solid rgba(255,255,255,.12);background:rgba(10,8,18,.56);backdrop-filter:blur(14px);
@@ -360,6 +369,10 @@
       <span id="portalCaptionText">Livros, capas, composições e páginas em exposição.</span>
     </div>
   </div>
+  
+  <!-- Back to Top Button (Visible in Hub) -->
+  <button class="hero-return-btn" id="heroReturnBtn">↑ Voltar ao topo</button>
+  
   <button class="room-back-btn" id="roomBackBtn">← Voltar ao hub</button>
   <div class="room-info" id="roomInfo">
     <h3 id="roomInfoTitle">Editorial</h3>
@@ -436,6 +449,7 @@
     function easeInOutCubic(t){ return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
     function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
     function easeInCubic(t){ return t * t * t; }
+    function easeOutQuad(t){ return 1 - (1 - t) * (1 - t); }
 
     function makeGlowDisc(radius, color, opacity=0.26){
       const c = document.createElement('canvas'); c.width = c.height = 256;
@@ -609,7 +623,6 @@
       const txt = makeTextSprite(def.label, '#fff8e8'); txt.position.set(0,2.46,0); g.add(txt);
       const mockups = createPortalMockups(def); mockups.position.set(0, 0.05, 1.55); g.add(mockups);
       
-      // Room placeholder (galleries removed)
       const room = new THREE.Group();
       room.position.set(0, -0.05, 1.45); 
       g.add(room);
@@ -671,6 +684,34 @@
     );
 
     mascot.position.set(0, heroY + 1.48, 0);
+
+    // ===== FRAGMENTATION SYSTEM =====
+    const fragGroup = new THREE.Group();
+    scene.add(fragGroup);
+    const fragCount = 80;
+    const fragColors = [0xffd24a, 0xff4db8, 0x7a39ff, 0x66d6ff, 0xffffff];
+    const fragments = [];
+    
+    for(let i=0; i<fragCount; i++){
+      const geom = new THREE.IcosahedronGeometry(0.08 + Math.random()*0.12, 0);
+      const mat = new THREE.MeshBasicMaterial({ 
+        color: fragColors[Math.floor(Math.random()*fragColors.length)], 
+        transparent: true, 
+        opacity: 0 
+      });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.visible = false;
+      fragGroup.add(mesh);
+      fragments.push({
+        mesh,
+        velocity: new THREE.Vector3(),
+        rotSpeed: new THREE.Vector3(
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0.2
+        )
+      });
+    }
 
     // ===== TUNNEL =====
     const tunnel = new THREE.Group(); scene.add(tunnel); tunnel.visible = false;
@@ -735,7 +776,6 @@
       if(state === 'hub' && orbitEnabled){
         targetOrbitTheta -= e.movementX * 0.0038; targetOrbitPhi += e.movementY * 0.0028; targetOrbitPhi = Math.max(-0.18, Math.min(0.72, targetOrbitPhi));
       } else if(state === 'portalRoom') {
-        // Continuous Dolly Track Movement
         targetRoomX -= e.movementX * 0.015; 
         const maxSlide = 2.5; 
         targetRoomX = Math.max(-maxSlide, Math.min(maxSlide, targetRoomX));
@@ -747,9 +787,25 @@
     // ===== STATE =====
     let state = 'hero'; let transitionStart = 0; let skipMode = false;
     const enterBtn = document.getElementById('enterBtn'); const skipBtn = document.getElementById('skipBtn');
-    enterBtn.addEventListener('click', () => startExperience(false)); skipBtn.addEventListener('click', () => startExperience(true));
-    function startExperience(skip = false){ if(state !== 'hero') return; state = skip ? 'skip' : 'transition'; skipMode = skip; transitionStart = clock.getElapsedTime(); document.body.classList.add('entering'); document.body.classList.remove('inHub','portalRoomState','aboutOpen'); tunnel.visible = !skip; }
-    function finishHub(){ state = 'hub'; orbitEnabled = true; renderer.domElement.style.cursor = 'grab'; document.body.classList.add('inHub'); document.body.classList.remove('portalRoomState','aboutOpen'); tunnel.visible = false; downIndicator.classList.add('show'); aboutLayer.classList.remove('show'); aboutLayer.setAttribute('aria-hidden','true'); document.body.classList.remove('aboutOpen'); roomBackBtn.classList.remove('show'); roomBackBtn.textContent = '← Voltar ao hub'; aboutWorld.visible = false; aboutButton.position.y = 0.16; aboutButtonCore.position.y = 0.34; aboutTargetRing.material.opacity = 0; aboutFloorHalo.material.opacity = 0; aboutRipple.material.opacity = 0; aboutRipple.scale.set(1,1,1); }
+    const heroReturnBtn = document.getElementById('heroReturnBtn');
+    
+    enterBtn.addEventListener('click', () => startExperience(false)); 
+    skipBtn.addEventListener('click', () => startExperience(true));
+    
+    function startExperience(skip = false){ if(state !== 'hero') return; state = skip ? 'skip' : 'transition'; skipMode = skip; transitionStart = clock.getElapsedTime(); document.body.classList.add('entering'); document.body.classList.remove('inHub','portalRoomState','aboutOpen'); tunnel.visible = !skip; heroReturnBtn.classList.remove('show'); }
+    
+    function finishHub(){ 
+      state = 'hub'; orbitEnabled = true; renderer.domElement.style.cursor = 'grab'; 
+      document.body.classList.add('inHub'); document.body.classList.remove('portalRoomState','aboutOpen'); 
+      tunnel.visible = false; downIndicator.classList.add('show'); 
+      aboutLayer.classList.remove('show'); aboutLayer.setAttribute('aria-hidden','true'); 
+      document.body.classList.remove('aboutOpen'); 
+      roomBackBtn.classList.remove('show'); roomBackBtn.textContent = '← Voltar ao hub'; 
+      aboutWorld.visible = false; aboutButton.position.y = 0.16; aboutButtonCore.position.y = 0.34; 
+      aboutTargetRing.material.opacity = 0; aboutFloorHalo.material.opacity = 0; 
+      aboutRipple.material.opacity = 0; aboutRipple.scale.set(1,1,1);
+      heroReturnBtn.classList.add('show'); // Show return button
+    }
 
     function startAboutTransition(){
       if(state !== 'hub') return;
@@ -767,6 +823,7 @@
       aboutMagicFlash.style.background = `radial-gradient(circle at 50% 64%, rgba(255,255,255,.0) 0%, rgba(255,210,74,.0) 22%, rgba(255,77,184,.0) 44%, rgba(0,0,0,0) 78%)`;
       aboutMagicFlash.style.opacity = '0';
       roomBackBtn.classList.remove('show');
+      heroReturnBtn.classList.remove('show');
     }
     function exitAboutSection(){
       if(state !== 'aboutSection') return;
@@ -795,6 +852,7 @@
     const portalFlash = document.getElementById('portalFlash'); const aboutMagicFlash = document.getElementById('aboutMagicFlash'); const roomBackBtn = document.getElementById('roomBackBtn');
     const downIndicator = document.getElementById('downIndicator'); const aboutLayer = document.getElementById('aboutLayer');
     downIndicator.addEventListener('click', startAboutTransition);
+    
     let activeRoomPortal = null; let roomEnterStart = 0; let roomExitStart = 0; let aboutStart = 0; let aboutExitStart = 0; let aboutImpactTriggered = false; const ROOM_TRAVEL_DUR = 1.9; const ROOM_EXIT_PULL_DUR = 1.1; const ABOUT_DROP_DUR = 2.35; const ABOUT_RETURN_DUR = 1.16;
     const roomCamFrom = new THREE.Vector3(); const roomLookFrom = new THREE.Vector3();
     const roomLookTo = new THREE.Vector3();
@@ -807,6 +865,11 @@
     const aboutLiftPoint = new THREE.Vector3(0, hubY + 3.9, 1.3);
     const aboutDriftPoint = new THREE.Vector3(0, hubY - 5.6, 2.1);
     
+    // Hero Return State
+    let heroReturnStart = 0;
+    const HERO_RETURN_DUR = 2.2;
+    const heroReturnFromCam = new THREE.Vector3();
+
     // Linear Room State Tracker
     let targetRoomX = 0;
 
@@ -829,6 +892,7 @@
       roomCurrentX = 0;
 
       state = 'portalRoomEnter';
+      heroReturnBtn.classList.remove('show');
     }
 
     function exitPortalRoom(){
@@ -845,6 +909,86 @@
       portalFlash.style.opacity = '0';
       state = 'portalRoomExit';
     }
+
+    function startHeroReturn() {
+      if(state !== 'hub') return;
+      state = 'heroReturn';
+      heroReturnStart = clock.getElapsedTime();
+      orbitEnabled = false;
+      heroReturnFromCam.copy(camera.position);
+      heroReturnBtn.classList.remove('show');
+      downIndicator.classList.remove('show');
+      document.body.classList.remove('inHub');
+      document.body.classList.add('entering'); 
+
+      // Trigger Fragmentation
+      fragGroup.position.copy(mascot.position);
+      fragments.forEach(f => {
+        f.mesh.visible = true;
+        f.mesh.position.set(0, (Math.random()-0.5)*2, 0); // Start near center
+        f.mesh.material.opacity = 1;
+        // Explosive velocity
+        const angle = Math.random() * Math.PI * 2;
+        const force = 3 + Math.random() * 8;
+        f.velocity.set(
+          Math.cos(angle) * force * (0.5 + Math.random()),
+          (Math.random() - 0.2) * force, // Upward bias
+          Math.sin(angle) * force * (0.5 + Math.random())
+        );
+      });
+    }
+
+    function updateHeroReturn(t) {
+      const p = Math.min((t - heroReturnStart) / HERO_RETURN_DUR, 1);
+      const e = easeInOutCubic(p);
+
+      // Camera movement
+      camera.position.lerpVectors(heroReturnFromCam, heroCamPos, e);
+      camera.lookAt(heroCamLook);
+
+      // Mascote Shrink & Spin
+      const shrinkProgress = Math.min(p * 2.5, 1); // Faster shrink
+      const scale = Math.max(0.001, 1 - easeInCubic(shrinkProgress));
+      mascot.scale.setScalar(scale);
+      mascot.rotation.y += 0.2;
+
+      // Fragmentation Animation
+      fragments.forEach(f => {
+        // Update position
+        f.mesh.position.add(f.velocity);
+        // Gravity
+        f.velocity.y -= 0.15;
+        // Damping
+        f.velocity.multiplyScalar(0.96);
+        // Rotation
+        f.mesh.rotation.x += f.rotSpeed.x;
+        f.mesh.rotation.y += f.rotSpeed.y;
+        // Fade out
+        if(p > 0.4) {
+          f.mesh.material.opacity = Math.max(0, 1 - ((p - 0.4) / 0.6));
+        }
+      });
+
+      // Lights
+      heroSpot.intensity = lerp(0.8, 4.2, e);
+      heroFillA.intensity = lerp(0.4, 2.1, e);
+      heroFillB.intensity = lerp(0.22, 1.5, e);
+      hubLight.intensity = lerp(5.1, 2.4, e);
+
+      if (p >= 1) {
+        state = 'hero';
+        document.body.classList.remove('entering');
+        document.body.classList.remove('inHub');
+        mascot.position.set(0, heroY + 1.48, 0);
+        mascot.scale.setScalar(1);
+        camera.position.copy(heroCamPos);
+        camera.lookAt(heroCamLook);
+        // Cleanup fragments
+        fragments.forEach(f => { f.mesh.visible = false; f.mesh.material.opacity = 0; });
+      }
+    }
+
+    heroReturnBtn.addEventListener('click', startHeroReturn);
     roomBackBtn.addEventListener('click', () => { if(state === 'portalRoom') exitPortalRoom(); else if(state === 'aboutSection') exitAboutSection(); });
 
     // ===== SUCK =====
@@ -854,6 +998,7 @@
       if(state !== 'hub') return; suckPortal = item; selectedPortal = item; suckStart = clock.getElapsedTime(); state = 'portalSuck'; orbitEnabled = false;
       mascotSuckOrigin.copy(mascot.position);
       portalFlash.style.transition = 'none'; portalFlash.style.background = `radial-gradient(circle at 50% 50%, rgba(255,255,255,.96) 0%, ${item.data.cssColor}88 30%, ${item.data.cssColor}44 55%, rgba(0,0,0,0) 80%)`; portalFlash.style.opacity = '0';
+      heroReturnBtn.classList.remove('show');
     }
     function updateSuck(t) {
       const raw = Math.min((t - suckStart) / SUCK_DUR, 1);
@@ -921,6 +1066,7 @@
         mascot.scale.setScalar(1); mascot.position.set(0, hubY + 1.52, 0); mascot.rotation.set(0,0,0);
         camera.position.copy(hubCamPos); camera.lookAt(hubCamLook);
         state = 'hub'; orbitEnabled = true; renderer.domElement.style.cursor = 'grab'; document.body.classList.remove('portalRoomState'); selectedPortal = null; suckPortal = null; activeRoomPortal = null;
+        heroReturnBtn.classList.add('show');
       }
     }
 
@@ -976,7 +1122,7 @@
       const veil = Math.sin(Math.min((p - 0.12) / 0.68, 1) * Math.PI);
       portalFlash.style.opacity = String(Math.max(0, veil * 0.16));
       aboutMagicFlash.style.opacity = String(Math.max(0, haloPulse * 0.4 + revealProgress * 0.14 - settlePhase * 0.06));
-      aboutMagicFlash.style.background = `radial-gradient(circle at 50% 70%, rgba(255,255,255,${0.04 + haloPulse * 0.08 + revealProgress * 0.08}) 0%, rgba(255,210,74,${0.06 + haloPulse * 0.26 + revealProgress * 0.18}) 18%, rgba(255,77,184,${0.04 + haloPulse * 0.16}) 42%, rgba(102,214,255,${0.02 + haloPulse * 0.12}) 58%, rgba(0,0,0,0) 82%)`;
+      aboutMagicFlash.style.background = `radial-gradient(circle at 50% 70%, rgba(255,255,white,${0.04 + haloPulse * 0.08 + revealProgress * 0.08}) 0%, rgba(255,210,74,${0.06 + haloPulse * 0.26 + revealProgress * 0.18}) 18%, rgba(255,77,184,${0.04 + haloPulse * 0.16}) 42%, rgba(102,214,255,${0.02 + haloPulse * 0.12}) 58%, rgba(0,0,0,0) 82%)`;
 
       const targetPulse = 0.56 + Math.sin(t * 2.8) * 0.08 + haloPulse * 0.36;
       aboutTargetRing.material.opacity = 0.38 + haloPulse * 0.34 - settlePhase * 0.06;
@@ -1054,6 +1200,7 @@
         aboutMagicFlash.style.opacity = '0';
         mascot.position.set(0, hubY + 1.52, 0); mascot.rotation.x = 0; mascot.rotation.z = 0; mascot.scale.setScalar(1);
         state = 'hub'; orbitEnabled = true; renderer.domElement.style.cursor = 'grab'; document.body.classList.remove('aboutOpen'); downIndicator.classList.add('show'); aboutWorld.visible = false;
+        heroReturnBtn.classList.add('show');
       }
     }
 
@@ -1183,6 +1330,7 @@
       else if(state === 'aboutTransition') updateAboutTransition(t);
       else if(state === 'aboutSection') updateAboutSection(t);
       else if(state === 'aboutReturn') updateAboutReturn(t);
+      else if(state === 'heroReturn') updateHeroReturn(t);
       else if(state === 'hub') updateHub(t);
       mascot.visible = true;
       setGroupOpacity(mascot, 1);
